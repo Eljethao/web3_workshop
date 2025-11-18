@@ -25,7 +25,9 @@ declare global {
  * USDC is an ERC-20 stablecoin on Ethereum Mainnet
  * Teaching Point: Smart contract interaction via ethers.js
  */
-const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // Mainnet USDC
+const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // Mainnet USDC, This is the smart contract address of USDC on Ethereum Mainnet
+
+// This is the Application Binary Interface - it defines what functions the USDC contract has.
 const USDC_ABI = [
   'function balanceOf(address account) public view returns (uint256)',
   'function decimals() public view returns (uint8)',
@@ -53,7 +55,7 @@ export async function connectWallet(): Promise<string> {
   try {
     // Request access to user's accounts
     const accounts = (await window.ethereum!.request({
-      method: 'eth_requestAccounts',
+      method: 'eth_requestAccounts', // ← Ethereum standard method
     })) as string[];
 
     if (!accounts || accounts.length === 0) {
@@ -82,12 +84,14 @@ export async function getBalance(address: string): Promise<string> {
 
   try {
     // Create a provider that uses window.ethereum (MetaMask)
+    // BrowserProvider Acts as a bridge between your dApp and the blockchain
     const provider = new BrowserProvider(window.ethereum!);
 
     /**
      * Teaching Point: getBalance()
      * Returns a BigInt in wei (smallest ETH unit)
      * formatEther() converts wei to ETH (1 ETH = 10^18 wei)
+     * Calls the blockchain to get the ETH balance
      */
     const balance = await provider.getBalance(address);
     const ethBalance = formatEther(balance);
@@ -163,35 +167,3 @@ export async function getUSDCBalance(address: string): Promise<string> {
   }
 }
 
-/**
- * Fetch Bitcoin price in USD from CoinGecko API
- * Free public API, no authentication required
- * @returns Bitcoin price as a string
- */
-export async function getBitcoinPrice(): Promise<string> {
-  try {
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch Bitcoin price');
-    }
-
-    const data = (await response.json()) as { bitcoin: { usd: number } };
-    const price = data.bitcoin.usd;
-
-    // Format price with commas for readability
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to fetch Bitcoin price: ${error.message}`);
-    }
-    throw error;
-  }
-}
